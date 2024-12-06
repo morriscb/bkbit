@@ -236,6 +236,9 @@ class Gff3:
         genome_version = url_metadata.get("release_version")
         genome_label = self.authority.value + "-" + taxon_id + "-" + genome_version
 
+        self.genome_label = genome_label
+        self.genome_version = genome_version
+
         ## STEP 2: Download the GFF file
         # Download the GFF file
         self.gff_file, hash_values = self.__download_gff_file()
@@ -247,9 +250,7 @@ class Gff3:
             assembly_id, assembly_version, assembly_label, assembly_strain
         )
         self.checksums = self.generate_digest(hash_values, DEFAULT_HASH)
-        self.genome_annotation = self.generate_genome_annotation(
-            genome_label, genome_version
-        )
+        self.genome_id = BICAN_ANNOTATION_PREFIX + genome_label.upper()
 
         self.gene_annotations = {}
 
@@ -366,6 +367,12 @@ class Gff3:
         Returns:
             ga.OrganismTaxon: The generated organism taxon object.
         """
+        self.logger.info(
+            TAXON_PREFIX + ":" + taxon_id,
+            self.taxon_scientific_name[taxon_id],
+            self.taxon_common_name[taxon_id],
+            PREFIX_MAP[TAXON_PREFIX] + taxon_id
+        )
         return ga.OrganismTaxon(
             id=TAXON_PREFIX + ":" + taxon_id,
             full_name=self.taxon_scientific_name[taxon_id],
@@ -425,7 +432,12 @@ class Gff3:
             strain=assembly_strain,
         )
 
-    def generate_genome_annotation(self, genome_label: str, genome_version: str):
+    def generate_genome_annotation(
+            self,
+            genome_label: str,
+            genome_version: str,
+            gene_annotations: list[ga.GeneAnnotation]
+    ):
         """
         Generates a genome annotation object.
 
@@ -450,6 +462,7 @@ class Gff3:
                 genome_version=genome_version,
             ),
             authority=self.authority,
+            gene_annotations=gene_annotations
         )
 
     def generate_digest(
@@ -588,13 +601,13 @@ class Gff3:
                             tuple(a.split("=") for a in tokens[8].split(";"))
                         )
                         # TODO: Write cleaner code that calls respective generate function based on the authority automatically
-                        if self.genome_annotation.authority == ga.AuthorityType.ENSEMBL:
+                        if self.authority.value == ga.AuthorityType.ENSEMBL.value:
                             gene_annotation = self.generate_ensembl_gene_annotation(
                                 attributes, curr_line_num
                             )
                             if gene_annotation is not None:
                                 self.gene_annotations[gene_annotation] = gene_annotation
-                        elif self.genome_annotation.authority == ga.AuthorityType.NCBI:
+                        elif self.authority.value == ga.AuthorityType.NCBI.value:
                             gene_annotation = self.generate_ncbi_gene_annotation(
                                 attributes, curr_line_num
                             )
@@ -605,6 +618,12 @@ class Gff3:
                 progress_bar.update(1)
                 curr_line_num += 1
             progress_bar.close()
+
+        self.genome_annotation = self.generate_genome_annotation(
+            genome_label=self.genome_label,
+            genome_version=self.genome_version,
+            gene_annotations=list(self.gene_annotations.values())
+        )
 
     def generate_ensembl_gene_annotation(self, attributes, curr_line_num):
         """
@@ -642,7 +661,7 @@ class Gff3:
             name=name,
             description=description,
             molecular_type=biotype,
-            referenced_in=self.genome_annotation.id,
+            referenced_in=self.genome_id,
             in_taxon=[self.organism_taxon.id],
             in_taxon_label=self.organism_taxon.full_name,
         )
@@ -720,7 +739,7 @@ class Gff3:
             name=name,
             description=description,
             molecular_type=biotype,
-            referenced_in=self.genome_annotation.id,
+            referenced_in=self.genome_id,
             in_taxon=[self.organism_taxon.id],
             in_taxon_label=self.organism_taxon.full_name,
             synonym=synonyms,
@@ -872,7 +891,12 @@ class Gff3:
             None
         """
 
-        data = [
+        data = []
+        for ck in self.checksums:
+            data.append(ck.dict(exclude_none=exclude_none, exclude_unset=exclude_unset))
+        for ga in self.gene_annotations.values():
+            ga.dict(exclude_none=exclude_none, exclude_unset=exclude_unset)
+        data.extend([
             self.organism_taxon.dict(
                 exclude_none=exclude_none, exclude_unset=exclude_unset
             ),
@@ -882,11 +906,7 @@ class Gff3:
             self.genome_annotation.dict(
                 exclude_none=exclude_none, exclude_unset=exclude_unset
             ),
-        ]
-        for ck in self.checksums:
-            data.append(ck.dict(exclude_none=exclude_none, exclude_unset=exclude_unset))
-        for ga in self.gene_annotations.values():
-            data.append(ga.dict(exclude_none=exclude_none, exclude_unset=exclude_unset))
+        ])
 
         output_data = {
             "@context": "https://raw.githubusercontent.com/brain-bican/models/main/jsonld-context-autogen/genome_annotation.context.jsonld",
