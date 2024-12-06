@@ -5484,6 +5484,7 @@ class GenomeAnnotation(Genome):
     reference_assembly: Union[GenomeAssembly, str] = Field(..., description="""The reference genome assembly that this genome annotation was created from.""", json_schema_extra = { "linkml_meta": {'alias': 'reference_assembly',
          'any_of': [{'range': 'genome assembly'}, {'range': 'string'}],
          'domain_of': ['genome annotation']} })
+    gene_annotations: List[GeneAnnotation] = Field(..., description="""The gene annotations that are part of this genome annotation.""", json_schema_extra = { "linkml_meta": {'alias': 'gene_annotations', 'domain_of': ['genome annotation']} })
     id: str = Field(..., description="""A unique identifier for an entity. Must be either a CURIE shorthand for a URI or a complete URI""", json_schema_extra = { "linkml_meta": {'alias': 'id',
          'definition_uri': 'https://w3id.org/biolink/vocab/id',
          'domain': 'entity',
