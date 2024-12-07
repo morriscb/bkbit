@@ -5103,9 +5103,13 @@ class GeneAnnotation(Gene):
     source_id: Optional[str] = Field(None, description="""The authority specific identifier.""", json_schema_extra = { "linkml_meta": {'alias': 'source_id',
          'domain_of': ['gene annotation'],
          'slot_uri': 'schema:identifier'} })
-    referenced_in: Union[GenomeAnnotation, str] = Field(..., description="""The genome annotation that this gene annotation was referenced from.""", json_schema_extra = { "linkml_meta": {'alias': 'referenced_in',
-         'any_of': [{'range': 'genome annotation'}, {'range': 'string'}],
-         'domain_of': ['gene annotation']} })
+    referenced_in: GenomeAnnotation = Field(...,
+        description="""The genome annotation that this gene annotation was referenced from.""",
+        json_schema_extra={"linkml_meta": {
+            'alias': 'referenced_in',
+            'domain_of': ['gene annotation']
+        }})
+
     id: str = Field(..., description="""A unique identifier for an entity. Must be either a CURIE shorthand for a URI or a complete URI""", json_schema_extra = { "linkml_meta": {'alias': 'id',
          'definition_uri': 'https://w3id.org/biolink/vocab/id',
          'domain': 'entity',
@@ -5481,9 +5485,7 @@ class GenomeAnnotation(Genome):
          'domain_of': ['genome annotation'],
          'slot_uri': 'schema:url'} })
     authority: Optional[AuthorityType] = Field(None, description="""The organization responsible for publishing the data.""", json_schema_extra = { "linkml_meta": {'alias': 'authority', 'domain_of': ['genome annotation']} })
-    reference_assembly: Union[GenomeAssembly, str] = Field(..., description="""The reference genome assembly that this genome annotation was created from.""", json_schema_extra = { "linkml_meta": {'alias': 'reference_assembly',
-         'any_of': [{'range': 'genome assembly'}, {'range': 'string'}],
-         'domain_of': ['genome annotation']} })
+    reference_assembly: GenomeAssembly = Field(..., description="""The reference genome assembly that this genome annotation was created from.""", json_schema_extra = { "linkml_meta": {'alias': 'reference_assembly', 'domain_of': ['genome annotation']} })
     id: str = Field(..., description="""A unique identifier for an entity. Must be either a CURIE shorthand for a URI or a complete URI""", json_schema_extra = { "linkml_meta": {'alias': 'id',
          'definition_uri': 'https://w3id.org/biolink/vocab/id',
          'domain': 'entity',
@@ -5847,6 +5849,7 @@ class GenomeAssembly(ThingWithTaxon, NamedThing):
          'is_a': 'node property',
          'slot_uri': 'biolink:version'} })
     strain: Optional[str] = Field(None, description="""The genetic variant or subtype of a species or organism.""", json_schema_extra = { "linkml_meta": {'alias': 'strain', 'domain_of': ['genome assembly']} })
+    organism_taxon: OrganismTaxon = Field(..., description="""The reference organism taxon that this genome annotation was created on.""", json_schema_extra = { "linkml_meta": {'alias': 'organism_taxon', 'domain_of': ['genome assembly']} })
     in_taxon: Optional[List[str]] = Field(None, description="""connects an entity to its taxonomic classification. Only certain kinds of entities can be taxonomically classified; see 'thing with taxon'""", json_schema_extra = { "linkml_meta": {'alias': 'in_taxon',
          'aliases': ['instance of',
                      'is organism source of gene product',
