@@ -5103,9 +5103,15 @@ class GeneAnnotation(Gene):
     source_id: Optional[str] = Field(None, description="""The authority specific identifier.""", json_schema_extra = { "linkml_meta": {'alias': 'source_id',
          'domain_of': ['gene annotation'],
          'slot_uri': 'schema:identifier'} })
-    referenced_in: Union[GenomeAnnotation, str] = Field(..., description="""The genome annotation that this gene annotation was referenced from.""", json_schema_extra = { "linkml_meta": {'alias': 'referenced_in',
-         'any_of': [{'range': 'genome annotation'}, {'range': 'string'}],
-         'domain_of': ['gene annotation']} })
+    genome_annotation: GenomeAnnotation = Field(..., json_schema_extra={
+        "linkml_meta": {'alias': 'genome_annotation',
+                        'domain_of': ['gene annotation']}})
+    genome_assembly: GenomeAssembly = Field(..., json_schema_extra={
+        "linkml_meta": {'alias': 'genome_assembly',
+                        'domain_of': ['gene annotation']}})
+    organism_taxon: OrganismTaxon = Field(..., json_schema_extra={
+        "linkml_meta": {'alias': 'organism_taxon',
+                        'domain_of': ['gene annotation']}})
     id: str = Field(..., description="""A unique identifier for an entity. Must be either a CURIE shorthand for a URI or a complete URI""", json_schema_extra = { "linkml_meta": {'alias': 'id',
          'definition_uri': 'https://w3id.org/biolink/vocab/id',
          'domain': 'entity',

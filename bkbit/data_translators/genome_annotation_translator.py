@@ -642,7 +642,9 @@ class Gff3:
             name=name,
             description=description,
             molecular_type=biotype,
-            referenced_in=self.genome_annotation.id,
+            genome_annotation=self.genome_annotation,
+            genome_assembly=self.genome_assembly,
+            organism_taxon=self.organism_taxon,
             in_taxon=[self.organism_taxon.id],
             in_taxon_label=self.organism_taxon.full_name,
         )
@@ -872,17 +874,7 @@ class Gff3:
             None
         """
 
-        data = [
-            self.organism_taxon.dict(
-                exclude_none=exclude_none, exclude_unset=exclude_unset
-            ),
-            self.genome_assembly.dict(
-                exclude_none=exclude_none, exclude_unset=exclude_unset
-            ),
-            self.genome_annotation.dict(
-                exclude_none=exclude_none, exclude_unset=exclude_unset
-            ),
-        ]
+        data = []
         for ck in self.checksums:
             data.append(ck.dict(exclude_none=exclude_none, exclude_unset=exclude_unset))
         for ga in self.gene_annotations.values():
