@@ -66,6 +66,7 @@ from tqdm import tqdm
 import click
 import pkg_resources
 from bkbit.models import genome_annotation as ga
+from bkbit.models.genome_annotation import AnnotationCollection, GeneAnnotation
 from bkbit.utils.setup_logger import setup_logger
 from bkbit.utils.load_json import load_json
 
@@ -373,6 +374,16 @@ class Gff3:
             iri=PREFIX_MAP[TAXON_PREFIX] + taxon_id,
         )
 
+    def generate_annotation_collection(
+            self,
+            gene_annotations: list[GeneAnnotation]
+    ):
+        """
+        """
+        return ga.AnnotationCollection(
+            gene_annotations=gene_annotations,
+        )
+
     def assign_authority_type(self, authority: str):
         """
         Assigns the authority type based on the given authority string.
@@ -605,6 +616,10 @@ class Gff3:
                 progress_bar.update(1)
                 curr_line_num += 1
             progress_bar.close()
+
+            self.annotation_collection = self.generate_annotation_collection(
+                gene_annotations=self.gene_annotations.values()
+            )
 
     def generate_ensembl_gene_annotation(self, attributes, curr_line_num):
         """
@@ -860,7 +875,7 @@ class Gff3:
                 result[key].add(e.strip())
         return result
 
-    def serialize_to_jsonld(
+    def serialize_to_json(
         self, exclude_none: bool = True, exclude_unset: bool = False
     ):
         """
@@ -873,16 +888,11 @@ class Gff3:
         Returns:
             None
         """
-
-        data = []
-        for ck in self.checksums:
-            data.append(ck.dict(exclude_none=exclude_none, exclude_unset=exclude_unset))
-        for ga in self.gene_annotations.values():
-            data.append(ga.dict(exclude_none=exclude_none, exclude_unset=exclude_unset))
-
         output_data = {
-            "@context": "https://raw.githubusercontent.com/brain-bican/models/main/jsonld-context-autogen/genome_annotation.context.jsonld",
-            "@graph": data,
+            "annotation_collection": self.annotation_collection.dict(
+                exclude_none=exclude_none,
+                exclude_unset=exclude_unset
+            )
         }
 
         print(json.dumps(output_data, indent=2))
@@ -928,7 +938,7 @@ def gff2jsonld(content_url, assembly_accession, assembly_strain, log_level, log_
         content_url, assembly_accession, assembly_strain, log_level, log_to_file
     )
     gff3.parse()
-    gff3.serialize_to_jsonld()
+    gff3.serialize_to_json()
 
 
 if __name__ == "__main__":

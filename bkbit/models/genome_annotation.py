@@ -6198,10 +6198,7 @@ class GenomeAssembly(ThingWithTaxon, NamedThing):
 class AnnotationCollection(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://identifiers.org/brain-bican/genome-annotation-schema',
          'tree_root': True})
-
-    annotations: Optional[List[GeneAnnotation]] = Field(None, json_schema_extra = { "linkml_meta": {'alias': 'annotations', 'domain_of': ['annotation collection']} })
-    genome_annotations: Optional[List[GenomeAnnotation]] = Field(None, json_schema_extra = { "linkml_meta": {'alias': 'genome_annotations', 'domain_of': ['annotation collection']} })
-    genome_assemblies: Optional[List[GenomeAssembly]] = Field(None, json_schema_extra = { "linkml_meta": {'alias': 'genome_assemblies', 'domain_of': ['annotation collection']} })
+    gene_annotations: Optional[List[GeneAnnotation]] = Field(None, json_schema_extra = { "linkml_meta": {'alias': 'annotations', 'domain_of': ['annotation collection']} })
 
 
 # Model rebuild
