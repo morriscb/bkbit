@@ -895,7 +895,7 @@ class Gff3:
             data.append(ck.dict(exclude_none=exclude_none, exclude_unset=exclude_unset))
         for ga in self.gene_annotations.values():
             data.append(ga.dict(exclude_none=exclude_none, exclude_unset=exclude_unset))
-ls -l
+
         output_data = {
             "@context": "https://raw.githubusercontent.com/brain-bican/models/main/jsonld-context-autogen/genome_annotation.context.jsonld",
             "@graph": data,
