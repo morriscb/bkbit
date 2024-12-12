@@ -357,6 +357,27 @@ class Gff3:
             "SHA1": sha1_hash.hexdigest(),
         }
 
+    def generate_annotation_collection(
+            self,
+            genome_annotations: list[ga.GenomeAnnotation],
+            genome_assemblies: list[ga.GenomeAssembly],
+            organism_taxons: list[ga.OrganismTaxon]
+    ):
+        """
+        Generates an organism taxon object based on the provided taxon ID.
+
+        Args:
+            taxon_id (str): The taxon ID of the organism.
+
+        Returns:
+            ga.OrganismTaxon: The generated organism taxon object.
+        """
+        self.annotation_collection = ga.AnnotationCollection(
+            genome_annotations=genome_annotations,
+            genome_assemblies=genome_assemblies,
+            organism_taxons=organism_taxons
+        )
+
     def generate_organism_taxon(self, taxon_id: str):
         """
         Generates an organism taxon object based on the provided taxon ID.
@@ -625,6 +646,12 @@ class Gff3:
             gene_annotations=list(self.gene_annotations.values())
         )
 
+        self.generate_annotation_collection(
+            genome_annotations=[self.genome_annotation],
+            genome_assemblies=[self.genome_assembly],
+            organism_taxons=[self.organism_taxon]
+        )
+
     def generate_ensembl_gene_annotation(self, attributes, curr_line_num):
         """
         Generates a GeneAnnotation object for Ensembl based on the provided attributes.
@@ -877,7 +904,7 @@ class Gff3:
                 result[key].add(e.strip())
         return result
 
-    def serialize_to_jsonld(
+    def serialize_to_json(
         self, exclude_none: bool = True, exclude_unset: bool = False
     ):
         """
@@ -890,27 +917,11 @@ class Gff3:
         Returns:
             None
         """
-
-        data = []
-        for ck in self.checksums:
-            data.append(ck.dict(exclude_none=exclude_none, exclude_unset=exclude_unset))
-        for ga in self.gene_annotations.values():
-            ga.dict(exclude_none=exclude_none, exclude_unset=exclude_unset)
-        data.extend([
-            self.organism_taxon.dict(
-                exclude_none=exclude_none, exclude_unset=exclude_unset
-            ),
-            self.genome_assembly.dict(
-                exclude_none=exclude_none, exclude_unset=exclude_unset
-            ),
-            self.genome_annotation.dict(
-                exclude_none=exclude_none, exclude_unset=exclude_unset
-            ),
-        ])
-
         output_data = {
-            "@context": "https://raw.githubusercontent.com/brain-bican/models/main/jsonld-context-autogen/genome_annotation.context.jsonld",
-            "@graph": data,
+            "annotation_collection": self.annotation_collection.dict(
+                exclude_none=exclude_none,
+                exclude_unset=exclude_unset
+            )
         }
 
         print(json.dumps(output_data, indent=2))
@@ -956,7 +967,7 @@ def gff2jsonld(content_url, assembly_accession, assembly_strain, log_level, log_
         content_url, assembly_accession, assembly_strain, log_level, log_to_file
     )
     gff3.parse()
-    gff3.serialize_to_jsonld()
+    gff3.serialize_to_json()
 
 
 if __name__ == "__main__":
